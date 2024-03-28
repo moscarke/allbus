@@ -14,7 +14,7 @@ xhttpr.onload = ()=> {
 		
 		for (let i = 0; i < routeNameList.length; i++){
 			const routeInfo = routeList[routeNameList[i]];
-			if (routeInfo.co == "gmb"){
+			if (routeInfo.co == "gmb" || routeInfo.co == "mtr" || routeInfo.co == "lightRail"){
 				continue;
 			}
 			let tr = document.createElement('tr');
@@ -96,6 +96,10 @@ function routeStop(routeName){
 		tbody.append(tr);
 	}
 	document.getElementById("stationList").style.display = "block";
+}
+
+function routeStopEta(routeName, stopId){
+	
 }
 
 function transitOperators(code){
