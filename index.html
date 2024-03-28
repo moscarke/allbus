@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<base target="_top">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>巴士抵站時間</title>
+		<link rel="stylesheet" href="style.css">
+		<script src="PapaParse-5.0.2/PapaParse-5.0.2/papaparse.min.js"></script>
+	</head>
+	
+	<body>		
+		<h1 style="margin: 10px; text-align:center;">抵站時間</h1>
+		<h3 id="routeNumber"></h1>
+		<h3 id="stopName"></h1>
+		
+		<div class="centerDiv">
+			<input type="text" id="routeSearch" class="routeSearch" onkeyup="searchRoute()" placeholder="Search...">
+		</div>
+
+		<div id="routeList">
+		  <table id="routeTable" class="timetable">
+			<tbody>
+				<tr>
+					<td style="width:14%"><strong>路線</strong></td>
+					<td style="width:86%"><strong>方向</strong></td>
+				</tr>
+			</tbody>
+		  </table>
+		</div>
+
+		<div id="stationList" style="display: none;">
+		  <table id="stationTable" class="timetable">
+			<tbody>
+				<tr>
+					<td></td>
+					<td><strong>巴士站</strong></td>
+				</tr>
+			</tbody>
+		  </table>
+		</div>
+		
+		<div id="etaList" style="display: none;">
+		  <table id="etaTable" class="timetable">
+			
+		  </table>
+		</div>
+		
+		<div class="centerDiv">
+		  <span id="waiting" class="loadingsrn" style="color: lime;">請稍等</span>
+		</div>
+
+		<div class="centerDiv" id="loadingdiv">
+		  <span id="loading" class="loadingsrn" style="display: none;">搜尋中...</span>
+		</div>
+		
+		<script src="script.js"></script>
+	</body>
+</html>
