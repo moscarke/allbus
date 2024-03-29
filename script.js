@@ -14,24 +14,29 @@ xhttpr.onload = ()=> {
 		
 		for (let i = 0; i < routeNameList.length; i++){
 			const routeInfo = routeList[routeNameList[i]];
-			if (routeInfo.co == "gmb" || routeInfo.co == "mtr" || routeInfo.co == "lightRail"){
+			if (routeInfo.co == "gmb" || routeInfo.co == "mtr" || routeInfo.co == "lightRail" || routeInfo.gtfsId == null){
 				continue;
 			}
 			let tr = document.createElement('tr');
 			let td = document.createElement('td');
 			let button = document.createElement('button');
 			let span = document.createElement('span');
-			let routeIdTd = document.createElement('td');
 			let routeNumberTd = document.createElement('td');
 			let company = document.createElement('p');
+			let serviceType = document.createElement('p');
 			let routeOrigTd = document.createElement('p');
 			let routeDestTd = document.createElement('p');
-
-			routeIdTd.textContent = routeInfo.gtfsId;
+			
 			routeNumberTd.textContent = routeInfo.route;
 			company.style = "font-size: 75%;color: #FFEC31;margin: 0px 0px";
 			company.textContent = transitOperators(routeInfo.co);
 			routeNumberTd.appendChild(company);
+			
+			if (routeInfo.serviceType != "1"){
+				serviceType.textContent = "特別班";
+				serviceType.style = "font-size: 75%;color: lightcyan;margin: 0px 0px";
+				routeNumberTd.appendChild(serviceType);
+			}
 			
 			button.className = "btnOrigin";
 			button.type = "button";
@@ -80,6 +85,7 @@ function routeStop(routeName){
 		number.textContent = i + 1;
 		button.className = "btnEta";
 		button.style = "text-align: left";
+		button.onclick = function (){routeStopEta(routeName, stops[i])};
 		button.textContent = stopInfo.name.zh;
 		fare.style = "font-size: 75%;color: #ffff99;margin: 0px 0px;";
 		
@@ -99,7 +105,23 @@ function routeStop(routeName){
 }
 
 function routeStopEta(routeName, stopId){
-	
+	const co = response.routeList[routeName].co;
+	for (let i = 0; i < co.length; i++){
+		if (co[i] == "ctb"){
+			const url = "https://rt.data.gov.hk/v2/transport/citybus/eta/ctb/" + stopId + "/" + response.routeList[routeName].route;
+			const xhttpr = new XMLHttpRequest();
+			xhttpr.open("GET", url, true);
+
+			xhttpr.send();
+
+			xhttpr.onload = ()=> {
+				if (xhttpr.status == 200){
+					const etaInfo = JSON.parse(xhttpr.response);
+					console.log(etaInfo);
+				}
+			}
+		}
+	}
 }
 
 function transitOperators(code){
