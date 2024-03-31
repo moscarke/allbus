@@ -62,23 +62,7 @@ xhttpr.onload = ()=> {
 			//console.log(routeList[routeNameList[i]]);
 		}
 		document.getElementById("waiting").style.display = "none";
-	}
-}
-
-function changeTable(company){
-	let table, tr, td, i, txtValue;
-	table = document.getElementById("routeTable");
-	tr = table.getElementsByTagName("tr");
-	for (i = 1; i < tr.length; i++) {
-		td = tr[i].getElementsByTagName("td")[0];
-		if (td) {
-		  txtValue = td.textContent || td.innerText;
-		  if (txtValue.indexOf(company) >= 0) {
-			  tr[i].style.display = "";
-		  } else {
-			  tr[i].style.display = "none";
-		  }
-		}       
+		changeTable("城巴");
 	}
 }
 
@@ -311,7 +295,33 @@ function transitOperators(code){
 	return output.join("/");
 }
 
-function searchRoute(){
+function changeTable(company){
+	document.getElementById("routeSearch").onkeyup = function (){searchRoute(company)};
+	let btn = document.getElementsByTagName("button");
+	for (let i = 0; i < 5; i++){
+		btn[i].style = "background-color: rgb(0, 187, 0);";
+	}
+	document.getElementById(company).style = "background-color: rgb(0, 107, 0);";
+	
+	let table, tr, td, i, txtValue;
+	table = document.getElementById("routeTable");
+	tr = table.getElementsByTagName("tr");
+	for (i = 1; i < tr.length; i++) {
+		td = tr[i].getElementsByTagName("td")[0];
+		if (td) {
+		  txtValue = td.textContent || td.innerText;
+		  if (txtValue.indexOf(company) >= 0) {
+			  tr[i].style.display = "";
+		  } else {
+			  tr[i].style.display = "none";
+		  }
+		}       
+	}
+	
+	searchRoute(company);
+}
+
+function searchRoute(company){
 	let input, filter, table, tr, td, i, txtValue;
 	input = document.getElementById("routeSearch");
 	filter = input.value.toUpperCase();
@@ -321,7 +331,7 @@ function searchRoute(){
 		td = tr[i].getElementsByTagName("td")[0];
 		if (td) {
 		  txtValue = td.textContent || td.innerText;
-		  if (txtValue.toUpperCase().indexOf(filter) == 0) {
+		  if (txtValue.toUpperCase().indexOf(filter) == 0 && txtValue.indexOf(company) >= 0) {
 			  tr[i].style.display = "";
 		  } else {
 			  tr[i].style.display = "none";
