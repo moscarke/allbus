@@ -8,6 +8,7 @@ xhttpr.send();
 xhttpr.onload = ()=> {
 	if (xhttpr.status == 200){
 		response = JSON.parse(xhttpr.response);
+		//The list of routes here
 		const routeList = response["routeList"];
 		const routeNameList = Object.keys(routeList);
 		const tbody = document.querySelector('#routeTable tbody');
@@ -63,6 +64,44 @@ xhttpr.onload = ()=> {
 		}
 		document.getElementById("waiting").style.display = "none";
 		changeTable("城巴");
+		
+		//The list for NEARBY here
+		const stopList = response["stopList"];
+		const stopIdList = Object.keys(stopList);
+		const closeStopList = [];
+		let co;
+		//const tbody = document.querySelector('#routeTable tbody');
+		
+		for (let i = 0; i < stopIdList.length; i++){
+			let distance = getDistanceFromLatLonInKm(stopList[stopIdList[i]].location.lat, stopList[stopIdList[i]].location.lng, 22.3042944, 114.2527965);
+			if (distance > 0.4){
+				continue;
+			}
+			
+			if (stopIdList[i].length == 6){
+				co = "ctb";
+			} else if (stopIdList[i].length == 16){
+				co = "kmb";
+			} else if (parseInt(stopIdList[i]) < 1000){
+				co = "nlb";
+			} else if (stopIdList[i].length == 3){
+				co = "mtr";
+				continue;
+			} else if (stopIdList[i][0] == "K" && stopIdList[i].length != 16) {
+				co = "mtrb";
+			} else {
+				co = "other";
+				continue;
+			}
+			
+			console.log(stopList[stopIdList[i]].name.zh)
+			closeStopList.push({distance: distance, name: stopList[stopIdList[i]].name.zh, id: stopIdList[i], co: co});
+			
+		}
+		closeStopList.sort(function(a, b) {
+			return parseFloat(a.distance) - parseFloat(b.distance);
+		});
+		console.log(closeStopList)
 	}
 }
 
@@ -133,7 +172,7 @@ function routeStopEta(routeName, stopId, sequence){
 					const rawInfo = JSON.parse(xhttpr.response);
 					const etaInfo = rawInfo.data;
 					for (let i = 0; i < etaInfo.length; i++){
-						if (response.routeList[routeName].bound.ctb != etaInfo[i].dir || etaInfo[i].eta == ""){
+						if (response.routeList[routeName].bound.ctb != etaInfo[i].dir || etaInfo[i].eta == "" || etaInfo[i].eta == null){
 							continue;
 						}
 						eta.push({dest: etaInfo[i].dest_tc, time: etaInfo[i].eta, co: "城巴", remark: etaInfo[i].rmk_tc});
@@ -156,7 +195,7 @@ function routeStopEta(routeName, stopId, sequence){
 					const rawInfo = JSON.parse(xhttpr.response);
 					const etaInfo = rawInfo.data;
 					for (let i = 0; i < etaInfo.length; i++){
-						if (response.routeList[routeName].bound.kmb != etaInfo[i].dir || etaInfo[i].eta == ""){
+						if (response.routeList[routeName].bound.kmb != etaInfo[i].dir || etaInfo[i].eta == "" || etaInfo[i].eta == null){
 							continue;
 						}
 						eta.push({dest: etaInfo[i].dest_tc, time: etaInfo[i].eta, co: "九巴", remark: etaInfo[i].rmk_tc});
@@ -179,7 +218,7 @@ function routeStopEta(routeName, stopId, sequence){
 					const rawInfo = JSON.parse(xhttpr.response);
 					const etaInfo = rawInfo.estimatedArrivals;
 					for (let i = 0; i < etaInfo.length; i++){
-						if (etaInfo[i].estimatedArrivalTime == ""){
+						if (etaInfo[i].estimatedArrivalTime == "" || etaInfo[i].estimatedArrivalTime == null){
 							continue;
 						}
 						eta.push({dest: "", time: etaInfo[i].estimatedArrivalTime, co: "嶼巴", remark: etaInfo[i].routeVariantName});
@@ -214,7 +253,7 @@ function routeStopEta(routeName, stopId, sequence){
 						}
 						const etaInfo = busStop[i].bus;
 						for (let j = 0; j < etaInfo.length; j++){
-							if (etaInfo[j].eta == ""){
+							if (etaInfo[j].eta == "" || etaInfo[j].eta == null){
 								continue;
 							}
 							let currentTime = new Date();
@@ -339,3 +378,22 @@ function searchRoute(company){
 		}       
 	}
 }
+
+function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
+  var R = 6371; // Radius of the earth in km
+  var dLat = deg2rad(lat2-lat1);  // deg2rad below
+  var dLon = deg2rad(lon2-lon1); 
+  var a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2)
+    ; 
+  var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+  var d = R * c; // Distance in km
+  return d;
+}
+
+function deg2rad(deg) {
+  return deg * (Math.PI/180)
+}
+
