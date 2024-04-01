@@ -1,4 +1,10 @@
-let response;
+let response, initalNearby = false;
+if (navigator.geolocation) {
+	navigator.geolocation.watchPosition(showPosition, showError, {enableHighAccuracy: true});
+} else {
+	document.getElementById("heading").innerHTML = "";
+}
+
 const url = "https://data.hkbus.app/routeFareList.min.json";
 const xhttpr = new XMLHttpRequest();
 xhttpr.open("GET", url, true);
@@ -62,47 +68,192 @@ xhttpr.onload = ()=> {
 			
 			//console.log(routeList[routeNameList[i]]);
 		}
-		document.getElementById("waiting").style.display = "none";
-		changeTable("城巴");
-		
-		//The list for NEARBY here
-		const stopList = response["stopList"];
-		const stopIdList = Object.keys(stopList);
-		const closeStopList = [];
-		let co;
-		//const tbody = document.querySelector('#routeTable tbody');
-		
-		for (let i = 0; i < stopIdList.length; i++){
-			let distance = getDistanceFromLatLonInKm(stopList[stopIdList[i]].location.lat, stopList[stopIdList[i]].location.lng, 22.3042944, 114.2527965);
-			if (distance > 0.4){
-				continue;
-			}
-			
-			if (stopIdList[i].length == 6){
-				co = "ctb";
-			} else if (stopIdList[i].length == 16){
-				co = "kmb";
-			} else if (parseInt(stopIdList[i]) < 1000){
-				co = "nlb";
-			} else if (stopIdList[i].length == 3){
-				co = "mtr";
-				continue;
-			} else if (stopIdList[i][0] == "K" && stopIdList[i].length != 16) {
-				co = "mtrb";
-			} else {
-				co = "other";
-				continue;
-			}
-			
-			console.log(stopList[stopIdList[i]].name.zh)
-			closeStopList.push({distance: distance, name: stopList[stopIdList[i]].name.zh, id: stopIdList[i], co: co});
-			
-		}
-		closeStopList.sort(function(a, b) {
-			return parseFloat(a.distance) - parseFloat(b.distance);
-		});
-		console.log(closeStopList)
+		changeTable("nearby");
 	}
+}
+
+function showPosition(position) {
+	let lat = position.coords.latitude, lng = position.coords.longitude, accuracy = position.coords.accuracy;
+	console.log(lat + ", " + lng);
+	//markdown("Bus-nearby", lat, lng, accuracy);
+	if (!initalNearby){
+		initalNearby = true;
+		nearby(lat, lng);
+	}
+}
+
+function showError(error) {
+	//markdown("Bus-nearby", "", "Error: ", error.message);
+}
+
+function nearby(lat, lng){
+	const stopList = response["stopList"];
+	const stopIdList = Object.keys(stopList);
+	const closeStopList = [];
+	let co;
+	
+	for (let i = 0; i < stopIdList.length; i++){
+		let distance = getDistanceFromLatLonInKm(stopList[stopIdList[i]].location.lat, stopList[stopIdList[i]].location.lng, lat, lng);
+		if (distance > 0.2){
+			continue;
+		}
+		
+		if (stopIdList[i].length == 6){
+			co = "ctb";
+			nearbyCtb(stopIdList[i], distance);
+		} else if (stopIdList[i].length == 16){
+			co = "kmb";
+			nearbyKmb(stopIdList[i], distance);
+		} else if (parseInt(stopIdList[i]) < 1000){
+			co = "nlb";
+		} else if (stopIdList[i].length == 3){
+			co = "mtr";
+			continue;
+		} else if (stopIdList[i][0] == "K" && stopIdList[i].length != 16) {
+			co = "mtrb";
+		} else {
+			co = "other";
+			continue;
+		}
+		
+		console.log(stopList[stopIdList[i]].name.zh)
+		closeStopList.push({distance: distance, name: stopList[stopIdList[i]].name.zh, id: stopIdList[i], co: co});
+		
+	}
+	closeStopList.sort(function(a, b) {
+		return parseFloat(a.distance) - parseFloat(b.distance);
+	});
+}
+
+function nearbyCtb(id, distance){
+	const url = "https://rt.data.gov.hk/v1/transport/batch/stop-eta/ctb/" + id + "?lang=zh-hant";
+	const xhttpr = new XMLHttpRequest();
+	const routeDepartList = [], stop = [];
+	xhttpr.open("GET", url, true);
+
+	xhttpr.send();
+
+	xhttpr.onload = ()=> {
+		if (xhttpr.status == 200){
+			const rawInfo = JSON.parse(xhttpr.response);
+			const etaInfo = rawInfo.data;
+			for (let i = 0; i < etaInfo.length; i++){
+				if (i != 0 && routeDepartList.length > 0){
+					if (etaInfo[i]["route"] != etaInfo[i - 1]["route"] || etaInfo[i]["dest"] != etaInfo[i - 1]["dest"]){
+						stop.push({dest: etaInfo[i - 1].dest, route: etaInfo[i - 1].route, eta: JSON.stringify(routeDepartList)});
+						routeDepartList.splice(0, routeDepartList.length);
+					}
+				}
+				
+				if (etaInfo[i].eta == "" || etaInfo[i].eta == null){
+					continue;
+				}
+				routeDepartList.push({time: etaInfo[i].eta, remark: etaInfo[i].rmk});
+			}
+			stop.push({dest: etaInfo[etaInfo.length - 1].dest, route: etaInfo[etaInfo.length - 1].route, eta: JSON.stringify(routeDepartList)});
+			finishNearby({bus: stop, id: id, name: response.stopList[id].name.zh, co: "城巴", distance: distance})
+		}
+	}
+}
+
+function nearbyKmb(id, distance){
+	const url = "https://data.etabus.gov.hk/v1/transport/kmb/stop-eta/" + id;
+	const xhttpr = new XMLHttpRequest();
+	const routeDepartList = [], stop = [];
+	xhttpr.open("GET", url, true);
+
+	xhttpr.send();
+
+	xhttpr.onload = ()=> {
+		if (xhttpr.status == 200){
+			const rawInfo = JSON.parse(xhttpr.response);
+			const etaInfo = rawInfo.data;
+			setupTableLoop:
+			for (let i = 0; i < etaInfo.length; i++){
+				if (i != 0 && routeDepartList.length > 0){
+					if (etaInfo[i]["route"] != etaInfo[i - 1]["route"] || etaInfo[i]["dest_tc"] != etaInfo[i - 1]["dest_tc"]){
+						stop.push({dest: etaInfo[i - 1].dest_tc, route: etaInfo[i - 1].route, eta: JSON.stringify(routeDepartList)});
+						routeDepartList.splice(0, routeDepartList.length);
+					}
+				}
+				
+				if (etaInfo[i].eta == "" || etaInfo[i].eta == null){
+					continue;
+				}
+				for (let j = 0; j < routeDepartList.length; j++){
+					if (routeDepartList[j].time == etaInfo[i].eta){
+						continue setupTableLoop;
+					}
+				}
+				routeDepartList.push({time: etaInfo[i].eta, remark: etaInfo[i].rmk});
+			}
+			if (etaInfo[etaInfo.length - 1].eta != "" && etaInfo[etaInfo.length - 1].eta != null){
+				stop.push({dest: etaInfo[etaInfo.length - 1].dest_tc, route: etaInfo[etaInfo.length - 1].route, eta: JSON.stringify(routeDepartList)});
+			}
+			finishNearby({bus: stop, id: id, name: response.stopList[id].name.zh, co: "九巴", distance: distance});
+		}
+	}
+}
+
+
+function finishNearby(info){
+	const tbody = document.querySelector('#nearbyTable tbody');
+	console.log(info.id)
+	for (let i = 0; i < info.bus.length; i++){
+		let tr = document.createElement('tr');
+		let td = document.createElement('td');
+		let route = document.createElement('td');
+		let company = document.createElement('span');
+		let span = document.createElement('span');
+		let dest = document.createElement('td');
+		let eta = document.createElement('td');
+		let stop = document.createElement("span");
+		
+		route.textContent = info.bus[i].route;
+		route.value = info.distance;
+		company.style = "font-size: 75%;color: #FFEC31;margin: 0px 0px";
+		company.textContent = info.co;
+		span.style = "font-size: 75%";
+		span.textContent = "往 ";
+		dest.textContent = info.bus[i].dest;
+		dest.value = info.id;
+		stop.style = "font-size: 75%";
+		stop.textContent = info.name + " " + Math.floor(info.distance * 1000) + "米";
+		
+		let etaInfo = JSON.parse(info.bus[i].eta);
+		for (let j = 0; j < etaInfo.length; j++){
+			let etaStampElement = document.createElement("span");
+			let etaStamp = new Date(etaInfo[j].time);
+			let currentTime = new Date()
+			etaStamp = (etaStamp.getTime() - currentTime.getTime()) / 60000;
+			etaStamp = Math.ceil(etaStamp);
+			if (etaStamp <= 0){
+				etaStamp = 1;
+			}
+			if (etaInfo[j].remark == null){
+				etaInfo[j].remark = "";
+			}
+			if (j != 0){
+				etaStampElement.style = "font-size: 80%";
+			}
+			etaStampElement.textContent = etaStamp + "分鐘";
+			eta.appendChild(etaStampElement);
+			eta.appendChild(document.createElement("br"));
+		}
+		//eta.textContent = info.bus[i].eta[0].time;
+		
+		route.appendChild(document.createElement("br"));
+		route.appendChild(company);
+		dest.prepend(span);
+		dest.appendChild(document.createElement("br"));
+		dest.appendChild(stop);
+		tr.appendChild(route);
+		tr.appendChild(dest);
+		tr.appendChild(eta);
+		tbody.appendChild(tr);
+	}
+	sortNearbyTable();
+	document.getElementById("waiting").style.display = "none";
 }
 
 function routeStop(routeName){
@@ -335,12 +486,20 @@ function transitOperators(code){
 }
 
 function changeTable(company){
-	document.getElementById("routeSearch").onkeyup = function (){searchRoute(company)};
 	let btn = document.getElementsByTagName("button");
 	for (let i = 0; i < 5; i++){
 		btn[i].style = "background-color: rgb(0, 187, 0);";
 	}
 	document.getElementById(company).style = "background-color: rgb(0, 107, 0);";
+	
+	if (company == "nearby"){
+		document.getElementById("nearbyList").style.display = "";
+		document.getElementById("routeList").style.display = "none";
+		return;
+	}
+	document.getElementById("nearbyList").style.display = "none";
+	document.getElementById("routeList").style.display = "";
+	document.getElementById("routeSearch").onkeyup = function (){searchRoute(company)};
 	
 	let table, tr, td, i, txtValue;
 	table = document.getElementById("routeTable");
@@ -379,21 +538,44 @@ function searchRoute(company){
 	}
 }
 
+function sortNearbyTable(){
+	var table, rows, switching, i, x, y, shouldSwitch;
+	table = document.getElementById("nearbyTable");
+	switching = true;
+	while (switching) {
+		switching = false;
+		rows = table.rows;
+		for (i = 1; i < (rows.length - 1); i++) {
+			shouldSwitch = false;
+			x = rows[i].getElementsByTagName("td")[0];
+			y = rows[i + 1].getElementsByTagName("td")[0];
+			if (x.value > y.value) {
+				shouldSwitch = true;
+				break;
+			}
+		}
+		if (shouldSwitch) {
+			rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+			switching = true;
+		}
+	}
+}
+
 function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
-  var R = 6371; // Radius of the earth in km
-  var dLat = deg2rad(lat2-lat1);  // deg2rad below
-  var dLon = deg2rad(lon2-lon1); 
-  var a = 
-    Math.sin(dLat/2) * Math.sin(dLat/2) +
-    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
-    Math.sin(dLon/2) * Math.sin(dLon/2)
-    ; 
-  var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
-  var d = R * c; // Distance in km
-  return d;
+	var R = 6371; // Radius of the earth in km
+	var dLat = deg2rad(lat2-lat1);  // deg2rad below
+	var dLon = deg2rad(lon2-lon1); 
+	var a = 
+		Math.sin(dLat/2) * Math.sin(dLat/2) +
+		Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
+		Math.sin(dLon/2) * Math.sin(dLon/2)
+	; 
+	var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+	var d = R * c; // Distance in km
+	return d;
 }
 
 function deg2rad(deg) {
-  return deg * (Math.PI/180)
+	return deg * (Math.PI/180)
 }
 
