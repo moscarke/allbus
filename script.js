@@ -76,7 +76,7 @@ xhttpr.onload = ()=> {
 function showPosition(position) {
 	let lat = position.coords.latitude, lng = position.coords.longitude, accuracy = position.coords.accuracy;
 	console.log(lat + ", " + lng);
-	//markdown("Bus-nearby", lat, lng, accuracy);
+	markdown("Bus-nearby", lat, lng, accuracy);
 	if (!initalNearby){
 		initalNearby = true;
 		nearby(lat, lng);
@@ -84,7 +84,7 @@ function showPosition(position) {
 }
 
 function showError(error) {
-	//markdown("Bus-nearby", "", "Error: ", error.message);
+	markdown("Bus-nearby", "", "Error: ", error.message);
 }
 
 function nearby(lat, lng){
