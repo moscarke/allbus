@@ -28,12 +28,12 @@ label{
 	border: none;
 	border-radius: 5px;
 	color: white;
-	padding: 16px 32px;
+	padding: 6px 12px;
 	text-align: center;
 	text-decoration: none;
 	display: inline-block;
-	font-size: 20px;
-	margin: 4px 2px;
+	font-size: 16px;
+	margin: 2px 1px;
 	transition-duration: 0.4s;
 	cursor: pointer;
 }
