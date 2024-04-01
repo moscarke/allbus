@@ -1,4 +1,4 @@
-let response, initalNearby = false;
+let response, initalNearby = false, nearbyRoute = [];
 const appScriptUrl = "https://script.google.com/macros/s/AKfycbzsVrLJcX4l2RwbnOhk8p257SydpssIIUwNDf4TXTEPajykB9lmc0qReevjdJFdeUX0/exec";
 if (navigator.geolocation) {
 	navigator.geolocation.watchPosition(showPosition, showError, {enableHighAccuracy: true});
@@ -325,6 +325,9 @@ function routeStopEta(routeName, stopId, sequence){
 					const rawInfo = JSON.parse(xhttpr.response);
 					const etaInfo = rawInfo.data;
 					for (let i = 0; i < etaInfo.length; i++){
+						if (response.routeList[routeName].bound.ctb == "OI"){
+							eta.push({dest: etaInfo[i].dest_tc, time: etaInfo[i].eta, co: "城巴", remark: etaInfo[i].rmk_tc});
+						}
 						if (response.routeList[routeName].bound.ctb != etaInfo[i].dir || etaInfo[i].eta == "" || etaInfo[i].eta == null){
 							continue;
 						}
