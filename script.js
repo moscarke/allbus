@@ -1,4 +1,4 @@
-let response, initalNearby = false, nearbyRoute = [];
+let response, initalNearby = false, nearbyRoute = [], coordinates = {};
 const appScriptUrl = "https://script.google.com/macros/s/AKfycbzsVrLJcX4l2RwbnOhk8p257SydpssIIUwNDf4TXTEPajykB9lmc0qReevjdJFdeUX0/exec";
 if (navigator.geolocation) {
 	navigator.geolocation.watchPosition(showPosition, showError, {enableHighAccuracy: true});
@@ -75,6 +75,8 @@ xhttpr.onload = ()=> {
 
 function showPosition(position) {
 	let lat = position.coords.latitude, lng = position.coords.longitude, accuracy = position.coords.accuracy;
+	coordinates.lat = lat;
+	coordinates.lng = lng;
 	console.log(lat + ", " + lng);
 	markdown("Bus-nearby", lat, lng, accuracy);
 	if (!initalNearby){
@@ -267,14 +269,23 @@ function routeStop(routeName){
 	const company = routeInfo.co[0];
 	const stops = routeInfo["stops"][company];
 	const tbody = document.querySelector("#stationTable tbody");
+	let closestDistance = 999999, closestStop;
 	for (let i = 0; i < stops.length; i++){
 		stopInfo = response.stopList[stops[i]];
 		let tr = document.createElement("tr");
 		let number = document.createElement("td");
 		let stopName = document.createElement("td");
 		let button = document.createElement("button");
-		let fare = document.createElement("p");
+		let fare = document.createElement("span");
 		let eta = document.createElement("div");
+		
+		if (coordinates.lat && coordinates.lng){
+			let distance = getDistanceFromLatLonInKm(stopInfo.location.lat, stopInfo.location.lng, coordinates.lat, coordinates.lng);
+			if (distance < closestDistance){
+				closestDistance = distance;
+				closestStop = i;
+			}
+		}
 		
 		number.textContent = i + 1;
 		button.className = "btnEta";
@@ -292,12 +303,26 @@ function routeStop(routeName){
 			fare.textContent = "車資: $" + routeInfo.fares[i];
 		}
 		
+		button.append(document.createElement("br"));
 		button.append(fare);
 		stopName.append(button);
 		stopName.append(eta);
 		tr.append(number);
 		tr.append(stopName);
 		tbody.append(tr);
+	}
+	if (closestDistance < 1){
+		let distanceElement = document.createElement("span");
+		let table = document.getElementById("stationTable").rows;
+		let img = document.createElement("img");
+		img.src = "walking.png";
+		img.style.width = "17.85px";
+		distanceElement.textContent = " (步行" + Math.floor(closestDistance * 1000) + "米)";
+		distanceElement.style = "font-size: 75%";
+		let closestTd = document.getElementById("stationTable").rows[closestStop + 1].getElementsByTagName("td")[0];
+		closestTd.appendChild(document.createElement("br"));
+		closestTd.appendChild(img);
+		document.getElementById("stationTable").rows[closestStop + 1].getElementsByTagName("td")[1].getElementsByTagName("button")[0].appendChild(distanceElement);
 	}
 	document.getElementById("stationList").style.display = "block";
 }
