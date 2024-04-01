@@ -1,5 +1,5 @@
 let response, initalNearby = false;
-const appScriptUrl = "https://script.google.com/macros/s/AKfycbxeY76bBwAdCdbRFMKSDcJe8j1D1nxlzwihCV68hm16S_dxbpBqRusIPt4RBZz7c1ad/exec";
+const appScriptUrl = "https://script.google.com/macros/s/AKfycbzsVrLJcX4l2RwbnOhk8p257SydpssIIUwNDf4TXTEPajykB9lmc0qReevjdJFdeUX0/exec";
 if (navigator.geolocation) {
 	navigator.geolocation.watchPosition(showPosition, showError, {enableHighAccuracy: true});
 } else {
@@ -85,6 +85,7 @@ function showPosition(position) {
 
 function showError(error) {
 	markdown("Bus-nearby", "", "Error: ", error.message);
+	changeTable("城巴");
 }
 
 function nearby(lat, lng){
