@@ -596,7 +596,7 @@ function sortNearbyTable(){
 function bktoHomepage(){
 	document.getElementById("backBtn").style.display = "none";
 	document.getElementById("stationList").style.display = "none";
-	document.getElementById("routeTable").innerHTML = '<tbody><tr><td style="width:22%"><strong>路線</strong></td><td style="width:78%"><strong>方向</strong></td></tr></tbody>';
+	document.getElementById("stationTable").innerHTML = "<tbody><tr><td></td><td><strong>巴士站</strong></td></tr></tbody>";
 	document.getElementById("routeList").style.display = "";
 	document.getElementById("routeSearch").style.display = "";
 	document.getElementById("companyBar").style.display = "";
