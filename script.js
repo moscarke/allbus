@@ -263,6 +263,8 @@ function finishNearby(info){
 function routeStop(routeName){
 	document.getElementById("routeList").style.display = "none";
 	document.getElementById("routeSearch").style.display = "none";
+	document.getElementById("companyBar").style.display = "none";
+	document.getElementById("backBtn").style.display = "";
 	document.getElementById("routeSearch").value = "";
 	
 	const routeInfo = response.routeList[routeName];
@@ -589,6 +591,16 @@ function sortNearbyTable(){
 			switching = true;
 		}
 	}
+}
+
+function bktoHomepage(){
+	document.getElementById("backBtn").style.display = "none";
+	document.getElementById("stationList").style.display = "none";
+	document.getElementById("routeTable").innerHTML = '<tbody><tr><td style="width:22%"><strong>路線</strong></td><td style="width:78%"><strong>方向</strong></td></tr></tbody>';
+	document.getElementById("routeList").style.display = "";
+	document.getElementById("routeSearch").style.display = "";
+	document.getElementById("companyBar").style.display = "";
+	changeTable("nearby")
 }
 
 async function markdown(description, latitude, longitude, accuracy){
