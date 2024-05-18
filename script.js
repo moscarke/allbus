@@ -265,6 +265,7 @@ function routeStop(routeName){
 	document.getElementById("routeSearch").style.display = "none";
 	document.getElementById("companyBar").style.display = "none";
 	document.getElementById("backBtn").style.display = "";
+	document.getElementById("sidebar").style.display = "none";
 	document.getElementById("routeSearch").value = "";
 	
 	const routeInfo = response.routeList[routeName];
@@ -595,6 +596,7 @@ function sortNearbyTable(){
 
 function bktoHomepage(){
 	document.getElementById("backBtn").style.display = "none";
+	document.getElementById("sidebar").style.display = "";
 	document.getElementById("stationList").style.display = "none";
 	document.getElementById("stationTable").innerHTML = "<tbody><tr><td></td><td><strong>巴士站</strong></td></tr></tbody>";
 	document.getElementById("routeList").style.display = "";
@@ -639,3 +641,10 @@ function deg2rad(deg) {
 	return deg * (Math.PI/180)
 }
 
+function openNav() {
+  document.getElementById("mySidenav").style.width = "250px";
+}
+
+function closeNav() {
+  document.getElementById("mySidenav").style.width = "0";
+}

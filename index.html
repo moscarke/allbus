@@ -10,6 +10,18 @@
 	</head>
 	
 	<body>
+		<div id="mySidenav" class="sidenav">
+			<a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+			<a href="https://tiscopeey.github.io/mtr">港鐵抵站時間</a>
+			<a href="https://moscarke.github.io/allbus">巴士抵站時間</a>
+			<a href="https://moscarke.github.io/lrt">輕鐵抵站時間</a>
+			<a href="">小巴抵站時間(Coming soon)</a>
+		</div>
+		
+		<div style="position: absolute;" id="sidebar">
+			<span style="font-size:30px;cursor:pointer;" onclick="openNav()">&#9776;</span>
+		</div>
+		
 		<h1 style="margin: 0;position: absolute;font-size: 400%;top: -15px;display:none" id="backBtn" onclick="bktoHomepage()">&#8678;</h1>
 		<h1 style="margin: 10px; text-align:center;">抵站時間</h1>
 		<h3 id="routeNumber"></h1>
@@ -76,6 +88,7 @@
 		  <span id="loading" class="loadingsrn" style="display: none;">搜尋中...</span>
 		</div>
 		
+		<p style="font-size: 50%;">Disclaimer: This site may use various types of technologies to record visit data to analyse site traffic and provide a better experience. Thanks to hkbus.app for providing support with route database.</p>
 		<script src="script.js"></script>
 	</body>
 </html>
