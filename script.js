@@ -273,6 +273,9 @@ function routeStop(routeName){
 	const stops = routeInfo["stops"][company];
 	const tbody = document.querySelector("#stationTable tbody");
 	let closestDistance = 999999, closestStop;
+	
+	markdown("Bus Eta", company, routeName, "");
+	
 	for (let i = 0; i < stops.length; i++){
 		stopInfo = response.stopList[stops[i]];
 		let tr = document.createElement("tr");
